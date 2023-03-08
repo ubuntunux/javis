@@ -1,1 +1,1 @@
-u
+print("Hello, Master.")
