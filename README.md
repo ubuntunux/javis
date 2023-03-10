@@ -50,7 +50,7 @@ return os.system('ls')
         $ conda install -c conda-forge ocl-icd-system
 
     - jupyter-lab
-        $ pip install jupyterlab
+        $ conda install -c conda-forge jupyterlab
 
     - pandas
         $ conda install pandas
