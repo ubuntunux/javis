@@ -2,15 +2,18 @@ from enum import Enum
 from threading import Thread
 import time
 
+
 class MachineState(Enum):
     Boot = 0
     Normal = 1
     PrepareToExit = 2
     Exit = 3
 
+
 class WillingType(Enum):
     Nothing = 0
     ShouldExit = 1
+
 
 class Job:
     def __init__(self):
@@ -21,15 +24,20 @@ class Job:
 class evaluatorData:
     def __init__(self):
         self.willing_type = WillingType.Nothing
+
+
 class ListenerData:
     def __init__(self):
         self.listen_data = None
+
+
 class Memory:
     def __init__(self):
         self.master_name = None
         self.machine_state = MachineState.Boot
         self.listener_data = ListenerData()
         self.evaluator_data = evaluatorData()
+
 
 def chairman(memory: Memory):
     while True:
@@ -39,11 +47,13 @@ def chairman(memory: Memory):
             break
     print("end - chairman")
 
+
 def evaluator(memory: Memory):
     while True:
         time.sleep(0)
 
-        if type(memory.listener_data.listen_data) is str and memory.listener_data.listen_data.lower().startswith("quit"):
+        if type(memory.listener_data.listen_data) is str and memory.listener_data.listen_data.lower().startswith(
+                "quit"):
             memory.evaluator_data.willing_type = WillingType.ShouldExit
 
         if memory.machine_state == MachineState.PrepareToExit:
@@ -58,6 +68,7 @@ def listener(memory: Memory):
         if memory.machine_state == MachineState.PrepareToExit:
             break
     print("end - listener")
+
 
 def main():
     memory = Memory()
