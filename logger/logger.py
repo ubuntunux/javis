@@ -21,7 +21,6 @@ class LogLevel:
 
 class Logger(SingletonInstane):
     def __init__(self, log_level=logging.DEBUG, max_log_count=10):
-
         self.logger = logging.getLogger('logger')
 
         # make log folder
