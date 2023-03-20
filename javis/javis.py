@@ -3,23 +3,19 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.metrics import dp, sp
 from kivy.uix.widget import Widget
+from kivy.logger import Logger
 
-from javis.config import Config
 from javis.memory import Memory
 from javis.chairman import ChairMan
 from javis.evaluator import Evaluator
 from javis.listener import Listener
-from logger.logger import Logger
 from utility.singleton import SingletonInstane
 
 
 class JavisApp(App, SingletonInstane):
     def __init__(self):
         super(JavisApp, self).__init__()
-        self.logger = Logger.instance()
-        self.logger.info(f'Run: {JavisApp.__name__}')
-        self.config = Config.instance()
-        self.config.initialize('config.ini')
+        Logger.info(f'Run: {JavisApp.__name__}')
 
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)

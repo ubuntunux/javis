@@ -3,6 +3,7 @@ from threading import Thread
 import time
 import traceback
 
+from kivy.config import Config
 from kivy.graphics import Color, Rectangle
 from kivy.metrics import dp, sp
 from kivy.uix.boxlayout import BoxLayout
@@ -13,8 +14,7 @@ from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-from javis.config import Config
-from logger.logger import Logger
+from javis.constants import *
 from utility.kivy_helper import create_rect, create_dynamic_rect
 
 
@@ -22,12 +22,19 @@ class Listener:
     def __init__(self, memory):
         self.memory = memory
         self.myGlobals = {}
-        self.logger = Logger.instance()
+
+        # initialize config
+        if not Config.has_section(section_listener):
+            Config.add_section(section_listener)
+
+        if not Config.has_option(*config_listener_pos):
+            Config.set(*config_listener_pos, (0, 0))
+        Config.write()
 
     def initialize(self):
-        config = Config.instance()
-        root_layout_pos = config.get('listener_pos')
-        root_layout = ScatterLayout(pos=root_layout_pos, size=('600sp', '80sp'), do_rotation=False, do_scale=False)
+        listener_pos = eval(Config.get(*config_listener_pos))
+
+        root_layout = ScatterLayout(pos=listener_pos, size=('600sp', '80sp'), do_rotation=False, do_scale=False)
         create_dynamic_rect(root_layout, color=(1, 1, 1, 0.1))
 
         # inner layout
