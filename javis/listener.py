@@ -22,6 +22,7 @@ class Listener:
     def __init__(self, memory):
         self.memory = memory
         self.myGlobals = {}
+        self.root_layout = None
 
         # initialize config
         if not Config.has_section(section_listener):
@@ -34,12 +35,12 @@ class Listener:
     def initialize(self):
         listener_pos = eval(Config.get(*config_listener_pos))
 
-        root_layout = ScatterLayout(pos=listener_pos, size=('600sp', '80sp'), do_rotation=False, do_scale=False)
-        create_dynamic_rect(root_layout, color=(1, 1, 1, 0.1))
+        self.root_layout = ScatterLayout(pos=listener_pos, size=('600sp', '80sp'), do_rotation=False, do_scale=False)
+        create_dynamic_rect(self.root_layout, color=(1, 1, 1, 0.1))
 
         # inner layout
         inner_layout = BoxLayout(orientation='vertical')
-        root_layout.add_widget(inner_layout)
+        self.root_layout.add_widget(inner_layout)
 
         # top layout
         top_layout = BoxLayout(orientation='horizontal', width='600sp', size_hint=(1.0, 1.0), padding='4sp')
@@ -73,13 +74,17 @@ class Listener:
 
         # button
         def callback(instance):
-            config.set('listener_pos', root_layout.pos)
+            config.set('listener_pos', self.root_layout.pos)
             config.save()
         btn_enter = Button(size_hint=(1, 1), text="Enter")
         btn_enter.bind(on_press=callback)
         input_layout.add_widget(btn_enter)
 
-        return root_layout
+        return self.root_layout
+
+    def destroy(self):
+        Config.set(*config_listener_pos, self.root_layout.pos)
+
 
     def update_listener(self):
         while True:

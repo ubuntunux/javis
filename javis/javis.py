@@ -37,6 +37,10 @@ class JavisApp(App, SingletonInstane):
         # evaluator_thread.join(0.1)
         # chairman_thread.join(0.1)
 
+    def stop(self):
+        super(JavisApp, self).stop()
+        self.listener.destroy()
+
     def build(self):
         Window.maximize()
         layout = Widget(size_hint=(1, 1))

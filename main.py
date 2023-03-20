@@ -38,7 +38,8 @@ def run_app():
     # run app
     from kivy.logger import Logger
     from javis.javis import JavisApp
-    JavisApp().run()
+    javis_app = JavisApp()
+    javis_app.run()
     Logger.info("Bye")
     Config.write()
 
