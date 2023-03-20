@@ -39,7 +39,7 @@ class JavisApp(App, SingletonInstane):
 
     def build(self):
         Window.maximize()
-        layout = Widget(size_hint=(1.0, 1.0))
+        layout = Widget(size_hint=(1, 1))
 
         listener_widget = self.listener.initialize()
         layout.add_widget(listener_widget)
