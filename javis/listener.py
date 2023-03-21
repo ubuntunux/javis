@@ -14,6 +14,8 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
+from kivy.uix.codeinput import CodeInput
+from kivy.extras.highlight import KivyLexer
 
 from javis.constants import *
 from utility.kivy_helper import create_rect, create_dynamic_rect
@@ -70,7 +72,8 @@ class Listener:
             sys.stdout = old_stdout
             text_input.text = ''
 
-        text_input = TextInput(text='Hello world', size_hint=(3, 1), multiline=False, auto_indent=True)
+        text_input = CodeInput(lexer=KivyLexer(), text='Hello world', size_hint=(3, 1))
+
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
 
