@@ -1,8 +1,11 @@
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.clock import Clock
-from kivy.metrics import dp, sp
+from kivy.metrics import Metrics
 from kivy.uix.widget import Widget
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
 
 from javis.memory import Memory
@@ -43,9 +46,22 @@ class JavisApp(App, SingletonInstane):
 
     def build(self):
         Window.maximize()
-        layout = Widget(size_hint=(1, 1))
 
-        listener_widget = self.listener.initialize()
+        layout = BoxLayout(orientation='vertical', size=(1, 1))
+
+        self.output = TextInput(
+            text="output",
+            halign='left',
+            readonly=True,
+            font_size="12dp",
+            multiline=True,
+            size_hint=(1, 2),
+            background_color=(1, 1, 1, 0),
+            foreground_color=(1, 1, 1, 1)
+        )
+        layout.add_widget(self.output)
+
+        listener_widget = self.listener.initialize(self.output, height='120sp', size_hint=(1, None))
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)

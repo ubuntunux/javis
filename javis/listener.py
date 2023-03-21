@@ -1,21 +1,21 @@
+import os
 from functools import partial
+from io import StringIO
+import sys
 from threading import Thread
 import time
 import traceback
 
+from kivy.core.window import Window
 from kivy.config import Config
 from kivy.graphics import Color, Rectangle
-from kivy.metrics import dp, sp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
-from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 from javis.constants import *
-from toast import toast
 from utility.kivy_helper import create_rect, create_dynamic_rect
 
 
@@ -33,56 +33,65 @@ class Listener:
             Config.set(*config_listener_pos, (0, 0))
         Config.write()
 
-    def initialize(self):
-        listener_pos = eval(Config.get(*config_listener_pos))
-
-        self.root_layout = ScatterLayout(pos=listener_pos, size=('600sp', '80sp'), do_rotation=False, do_scale=False)
+    def initialize(self, output, height, size_hint):
+        # inner layout
+        self.root_layout = BoxLayout(orientation='vertical', height=height, size_hint=size_hint)
         create_dynamic_rect(self.root_layout, color=(1, 1, 1, 0.1))
 
-        # inner layout
-        inner_layout = BoxLayout(orientation='vertical')
-        self.root_layout.add_widget(inner_layout)
-
         # top layout
-        top_layout = BoxLayout(orientation='horizontal', width='600sp', size_hint=(1.0, 1.0), padding='4sp')
-        inner_layout.add_widget(top_layout)
+        top_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
+        self.root_layout.add_widget(top_layout)
         label = Label(text="Javis", font_size='30sp', halign='right')
         top_layout.add_widget(label)
 
         # input_layout
         input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
-        inner_layout.add_widget(input_layout)
+        self.root_layout.add_widget(input_layout)
 
         # text layout
-        def on_enter(instance):
-            print(">>>", instance.text)
-            try:
-                print(eval(instance.text, self.myGlobals))
-            except PyBroadException:
+        def on_enter(text_input, instance):
+            old_stdout = sys.stdout
+            sys.stdout = StringIO()
+            if text_input.text == 'clear' or text_input.text == 'cls':
+                output.text = ''
+            if text_input.text == 'dir' or text_input.text == 'ls':
+                for content in os.listdir():
+                    print(content)
+            else:
+                print(">>>", text_input.text)
                 try:
-                    exec(instance.text, self.myGlobals)
-                except PyBroadException:
-                    print(traceback.format_exc())
-            instance.text = ''
-            instance.focus = True
-
-        def on_focus(inst, value):
-            if not value:
-                inst.focus = True
+                    print(eval(text_input.text, self.myGlobals))
+                except:
+                    try:
+                        exec(text_input.text, self.myGlobals)
+                    except:
+                        print(traceback.format_exc())
+            output.text = '\n'.join([output.text, sys.stdout.getvalue()])
+            sys.stdout = old_stdout
+            text_input.text = ''
 
         text_input = TextInput(text='Hello world', size_hint=(3, 1), multiline=False, auto_indent=True)
-        text_input.bind(on_text_validate=on_enter)
-        text_input.bind(focus=on_focus)
+        text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
 
-        # button
-        def callback(instance):
-            Config.set(*config_listener_pos, self.root_layout.pos)
-            Config.write()
-            toast("callback")
+        def on_key_down(keyboard, keycode, key, modifiers):
+            if keycode[1] == 'enter' or keycode[1] == 'numpadenter':
+                on_enter(text_input, text_input)
+            if not text_input.focus:
+                text_input.focus = True
 
-        btn_enter = Button(size_hint=(1, 1), text="Enter")
-        btn_enter.bind(on_press=callback)
+        keyboard = Window.request_keyboard(keyboard_closed, text_input)
+        keyboard.bind(on_key_down=on_key_down)
+
+        btn_enter = Button(size_hint=(1, 1), text="Run")
+        btn_enter.bind(on_press=partial(on_enter, text_input))
+        input_layout.add_widget(btn_enter)
+
+        def on_clear(*args):
+            output.text = ''
+
+        btn_enter = Button(size_hint=(1, 1), text="Clear")
+        btn_enter.bind(on_press=on_clear)
         input_layout.add_widget(btn_enter)
 
         return self.root_layout
