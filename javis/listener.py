@@ -77,8 +77,11 @@ class Listener:
         def on_key_down(keyboard, keycode, key, modifiers):
             if keycode[1] == 'enter' or keycode[1] == 'numpadenter':
                 on_enter(text_input, text_input)
-            if not text_input.focus:
-                text_input.focus = True
+            # if not text_input.focus:
+            #     text_input.focus = True
+
+        def keyboard_closed(*args):
+            pass
 
         keyboard = Window.request_keyboard(keyboard_closed, text_input)
         keyboard.bind(on_key_down=on_key_down)

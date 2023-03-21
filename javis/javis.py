@@ -1,5 +1,6 @@
 from kivy.app import App
 from kivy.core.window import Window
+from kivy.config import Config
 from kivy.clock import Clock
 from kivy.metrics import Metrics
 from kivy.uix.widget import Widget
@@ -46,6 +47,9 @@ class JavisApp(App, SingletonInstane):
 
     def build(self):
         Window.maximize()
+        # if mode not in ('', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'):
+        Config.set('kivy', 'keyboard_mode', 'system')
+        Window.configure_keyboards()
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
 
@@ -61,7 +65,7 @@ class JavisApp(App, SingletonInstane):
         )
         layout.add_widget(self.output)
 
-        listener_widget = self.listener.initialize(self.output, height='120sp', size_hint=(1, None))
+        listener_widget = self.listener.initialize(self.output, height='100sp', size_hint=(1, None))
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)
