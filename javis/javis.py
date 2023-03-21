@@ -9,10 +9,12 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
 
+from javis.constants import *
 from javis.memory import Memory
 from javis.chairman import ChairMan
 from javis.evaluator import Evaluator
 from javis.listener import Listener
+from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
 
 
@@ -40,10 +42,18 @@ class JavisApp(App, SingletonInstane):
         # listener_thread.join(0.1)
         # evaluator_thread.join(0.1)
         # chairman_thread.join(0.1)
+        # initialize config
+        
+        config_set_default(*config_javis_output, '')
+        Config.write()
+        
+    def destroy(self):
+        Config.set(*config_javis_output, self.output.text)
 
     def stop(self):
-        super(JavisApp, self).stop()
         self.listener.destroy()
+        self.destroy()
+        super(JavisApp, self).stop()
 
     def build(self):
         # Window.maximize()
@@ -53,9 +63,9 @@ class JavisApp(App, SingletonInstane):
         Window.configure_keyboards()
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-
+        output = Config.get(*config_javis_output)
         self.output = TextInput(
-            text="output",
+            text=output,
             halign='left',
             readonly=True,
             font_size="12dp",

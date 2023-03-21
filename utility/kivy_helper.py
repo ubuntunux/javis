@@ -1,5 +1,6 @@
 from functools import partial
 
+from kivy.config import Config
 from kivy.graphics import Color, Rectangle
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
@@ -25,3 +26,11 @@ def create_rect(instance, color):
     with instance.canvas.before:
         Color(*color)
         instance.rect = Rectangle(pos=instance.pos, size=instance.size, size_hint=(1, 1))
+        
+        
+def config_set_default(section, option, value):
+    if not Config.has_section(section):
+        Config.add_section(section)
+
+    if not Config.has_option(section, option):
+        Config.set(section, option, value)

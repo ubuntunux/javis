@@ -52,27 +52,28 @@ class Listener:
 
         # text layout
         def on_enter(text_input, instance):
-            old_stdout = sys.stdout
+            prev_stdout = sys.stdout
             sys.stdout = StringIO()
-            if text_input.text == 'clear' or text_input.text == 'cls':
+            cmd = text_input.text.rstrip()
+            if cmd == 'clear' or cmd == 'cls':
                 output.text = ''
-            if text_input.text == 'dir' or text_input.text == 'ls':
+            if cmd == 'dir' or cmd == 'ls':
                 for content in os.listdir():
                     print(content)
             else:
-                print(">>>", text_input.text)
+                print(">>>", cmd)
                 try:
-                    print(eval(text_input.text, self.myGlobals))
+                    print(eval(cmd, self.myGlobals))
                 except:
                     try:
-                        exec(text_input.text, self.myGlobals)
+                        exec(cmd, self.myGlobals)
                     except:
                         print(traceback.format_exc())
-            output.text = '\n'.join([output.text, sys.stdout.getvalue()])
-            sys.stdout = old_stdout
+            output.text = '\n'.join([output.text, sys.stdout.getvalue()]).rstrip()
+            sys.stdout = prev_stdout
             text_input.text = ''
 
-        text_input = CodeInput(lexer=KivyLexer(), text='Hello world', size_hint=(3, 1))
+        text_input = CodeInput(lexer=KivyLexer(), text='', size_hint=(3, 1))
 
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
