@@ -4,6 +4,7 @@ from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.properties import NumericProperty
 
+
 TOAST_KV = '''
 <_Toast@Label>:
     size_hint: (None, None)
@@ -57,20 +58,21 @@ class _Toast(Label):
     def on_texture_size(self, instance, size):
         self.size = map(lambda i: i * 1.3, size)
         if not self._bound:
-            Window.bind(on_resize=self._align)
+            Window.bind(on_resize=self.resize_window)
             self._bound = True
         self._align(None, Window.size)
+
+    def resize_window(self, win, width, height):
+        self._align(win, (width, height))
 
     def _align(self, win, size):
         self.x = (size[0] - self.width) / 2.0
         self.y = size[1] * 0.1
 
     def _in_out(self, dt):
-        print(dt)
         self._duration -= dt * 1000
         if self._duration <= 0:
             self._transparency = 1.0 + (self._duration / self._rampdown)
-            print(self._transparency)
         if -self._duration > self._rampdown:
             Window.remove_widget(self)
             return False
