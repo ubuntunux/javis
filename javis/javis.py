@@ -46,8 +46,9 @@ class JavisApp(App, SingletonInstane):
         self.listener.destroy()
 
     def build(self):
-        Window.maximize()
+        # Window.maximize()
         # if mode not in ('', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'):
+        # Window.softinput_mode = 'below_target'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
 
