@@ -15,6 +15,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 from javis.constants import *
+from toast import toast
 from utility.kivy_helper import create_rect, create_dynamic_rect
 
 
@@ -54,19 +55,21 @@ class Listener:
 
         # text layout
         def on_enter(instance):
+            print(">>>", instance.text)
             try:
                 print(eval(instance.text, self.myGlobals))
-            except:
+            except PyBroadException:
                 try:
                     exec(instance.text, self.myGlobals)
-                except:
-                     print(traceback.format_exc())
+                except PyBroadException:
+                    print(traceback.format_exc())
             instance.text = ''
             instance.focus = True
 
         def on_focus(inst, value):
             if not value:
                 inst.focus = True
+
         text_input = TextInput(text='Hello world', size_hint=(3, 1), multiline=False, auto_indent=True)
         text_input.bind(on_text_validate=on_enter)
         text_input.bind(focus=on_focus)
@@ -74,8 +77,10 @@ class Listener:
 
         # button
         def callback(instance):
-            config.set('listener_pos', self.root_layout.pos)
-            config.save()
+            Config.set(*config_listener_pos, self.root_layout.pos)
+            Config.write()
+            toast("callback")
+
         btn_enter = Button(size_hint=(1, 1), text="Enter")
         btn_enter.bind(on_press=callback)
         input_layout.add_widget(btn_enter)
@@ -84,7 +89,6 @@ class Listener:
 
     def destroy(self):
         Config.set(*config_listener_pos, self.root_layout.pos)
-
 
     def update_listener(self):
         while True:
