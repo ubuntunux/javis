@@ -28,6 +28,7 @@ class Listener:
         self.root_layout = None
         self.history = []
         self.history_index = -1
+        self.multiline = False
 
         # initialize config
         if not Config.has_section(section_listener):
@@ -54,12 +55,14 @@ class Listener:
 
         # text layout
         def on_enter(text_input, instance):
+            self.multiline = False
             prev_stdout = sys.stdout
             sys.stdout = StringIO()
             cmd = text_input.text.rstrip()
 
-            if cmd != '':
+            if cmd != '' and (0 == len(self.history) or self.history[-1] != cmd):
                 self.history.append(cmd)
+                self.history_index = -1
 
             if cmd == 'clear' or cmd == 'cls':
                 output.text = ''
@@ -85,6 +88,8 @@ class Listener:
         input_layout.add_widget(text_input)
 
         def on_press_prev(inst):
+            if self.multiline:
+                return
             num_history = len(self.history)
             if 0 < num_history:
                 if self.history_index < 0:
@@ -94,6 +99,8 @@ class Listener:
                 text_input.text = self.history[self.history_index]
 
         def on_press_next(inst):
+            if self.multiline:
+                return
             num_history = len(self.history)
             if 0 < num_history and 0 <= self.history_index < num_history:
                 self.history_index += 1
@@ -105,7 +112,13 @@ class Listener:
         def on_key_down(keyboard, keycode, key, modifiers):
             key_name = keycode[1]
             if key_name == 'enter' or key_name == 'numpadenter':
-                on_enter(text_input, text_input)
+                if 'shift' in modifiers:
+                    self.multiline = True
+                elif 'ctrl' in modifiers:
+                    self.multiline = False
+                # run
+                if not self.multiline:
+                    on_enter(text_input, text_input)
             elif key_name == 'up':
                 on_press_prev(None)
             elif key_name == 'down':
