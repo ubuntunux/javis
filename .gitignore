@@ -133,3 +133,4 @@ dmypy.json
 .kivy
 .log
 config.ini
+output.txt

@@ -1,3 +1,5 @@
+import os.path
+
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
@@ -44,17 +46,15 @@ class JavisApp(App, SingletonInstane):
         # chairman_thread.join(0.1)
         # initialize config
         
-        config_set_default(*config_javis_output, '')
-        Config.write()
-        
     def destroy(self):
-        Config.set(*config_javis_output, self.output.text)
+        with open(javis_output_filename, 'w') as f:
+            f.write(self.output.text)
 
-    def stop(self):
+    def on_stop(self):
         self.listener.destroy()
         self.destroy()
-        super(JavisApp, self).stop()
-
+        Config.write()
+        
     def build(self):
         # Window.maximize()
         Window.softinput_mode = 'below_target'
@@ -63,11 +63,15 @@ class JavisApp(App, SingletonInstane):
         Window.configure_keyboards()
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-        output = Config.get(*config_javis_output)
+        output = ''
+        if os.path.exists(javis_output_filename):
+            with open(javis_output_filename, 'r') as f:
+                output = f.read()
         self.output = TextInput(
             text=output,
             halign='left',
             readonly=True,
+            font_name='fonts/NanumGothic_Coding.ttf',
             font_size="12dp",
             multiline=True,
             size_hint=(1, 2),
@@ -76,7 +80,7 @@ class JavisApp(App, SingletonInstane):
         )
         layout.add_widget(self.output)
 
-        listener_widget = self.listener.initialize(self.output, height='100sp', size_hint=(1, None))
+        listener_widget = self.listener.initialize(self, self.output, height='100sp', size_hint=(1, None))
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)
