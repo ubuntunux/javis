@@ -1,3 +1,5 @@
+import os.path
+
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
@@ -44,17 +46,15 @@ class JavisApp(App, SingletonInstane):
         # chairman_thread.join(0.1)
         # initialize config
         
-        config_set_default(*config_javis_output, '')
-        Config.write()
-        
     def destroy(self):
-        Config.set(*config_javis_output, self.output.text)
+        with open(javis_output_filename, 'w') as f:
+            f.write(self.output.text)
 
-    def stop(self):
+    def on_stop(self):
         self.listener.destroy()
         self.destroy()
-        super(JavisApp, self).stop()
-
+        Config.write()
+        
     def build(self):
         # Window.maximize()
         Window.softinput_mode = 'below_target'
@@ -63,9 +63,12 @@ class JavisApp(App, SingletonInstane):
         Window.configure_keyboards()
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-        output = Config.get(*config_javis_output)
+        output = ''
+        if os.path.exists(javis_output_filename):
+            with open(javis_output_filename, 'r') as f:
+                output = f.read()
         self.output = TextInput(
-            text=''
+            text=output,
             halign='left',
             readonly=True,
             font_name='fonts/NanumGothic_Coding.ttf',
