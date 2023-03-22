@@ -77,7 +77,7 @@ class Listener:
 
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
-
+        
         def on_key_down(keyboard, keycode, key, modifiers):
             if keycode[1] == 'enter' or keycode[1] == 'numpadenter':
                 on_enter(text_input, text_input)
@@ -89,6 +89,7 @@ class Listener:
 
         keyboard = Window.request_keyboard(keyboard_closed, text_input)
         keyboard.bind(on_key_down=on_key_down)
+        text_input.focus = True
 
         btn_enter = Button(size_hint=(1, 1), text="Run")
         btn_enter.bind(on_press=partial(on_enter, text_input))

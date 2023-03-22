@@ -1,4 +1,3 @@
-import configparser
 from glob import glob
 import os
 
