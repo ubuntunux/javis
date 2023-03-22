@@ -26,6 +26,8 @@ class Listener:
         self.memory = memory
         self.myGlobals = {}
         self.root_layout = None
+        self.history = []
+        self.history_index = -1
 
         # initialize config
         if not Config.has_section(section_listener):
@@ -35,7 +37,7 @@ class Listener:
             Config.set(*config_listener_pos, (0, 0))
         Config.write()
 
-    def initialize(self, output, height, size_hint):
+    def initialize(self, app, output, height, size_hint):
         # inner layout
         self.root_layout = BoxLayout(orientation='vertical', height=height, size_hint=size_hint)
         create_dynamic_rect(self.root_layout, color=(1, 1, 1, 0.1))
@@ -55,12 +57,16 @@ class Listener:
             prev_stdout = sys.stdout
             sys.stdout = StringIO()
             cmd = text_input.text.rstrip()
+
+            if cmd != '':
+                self.history.append(cmd)
+
             if cmd == 'clear' or cmd == 'cls':
                 output.text = ''
-            if cmd == 'dir' or cmd == 'ls':
+            elif cmd == 'dir' or cmd == 'ls':
                 for content in os.listdir():
                     print(content)
-            else:
+            elif cmd != '':
                 print(">>>", cmd)
                 try:
                     print(eval(cmd, self.myGlobals))
@@ -77,12 +83,33 @@ class Listener:
 
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
+
+        def on_press_prev(inst):
+            num_history = len(self.history)
+            if 0 < num_history:
+                if self.history_index < 0:
+                    self.history_index = num_history - 1
+                elif 0 < self.history_index:
+                    self.history_index -= 1
+                text_input.text = self.history[self.history_index]
+
+        def on_press_next(inst):
+            num_history = len(self.history)
+            if 0 < num_history and 0 <= self.history_index < num_history:
+                self.history_index += 1
+                if self.history_index == num_history:
+                    text_input.text = ''
+                else:
+                    text_input.text = self.history[self.history_index]
         
         def on_key_down(keyboard, keycode, key, modifiers):
-            if keycode[1] == 'enter' or keycode[1] == 'numpadenter':
+            key_name = keycode[1]
+            if key_name == 'enter' or key_name == 'numpadenter':
                 on_enter(text_input, text_input)
-            # if not text_input.focus:
-            #     text_input.focus = True
+            elif key_name == 'up':
+                on_press_prev(None)
+            elif key_name == 'down':
+                on_press_next(None)
 
         def keyboard_closed(*args):
             pass
@@ -101,6 +128,23 @@ class Listener:
         btn_enter = Button(size_hint=(1, 1), text="Clear")
         btn_enter.bind(on_press=on_clear)
         input_layout.add_widget(btn_enter)
+
+        # prev
+        btn_prev = Button(size_hint=(0.5, 1), text="<<")
+        top_layout.add_widget(btn_prev)
+        btn_prev.bind(on_press=on_press_prev)
+
+        # next
+        btn_next = Button(size_hint=(0.5, 1), text=">>")
+        top_layout.add_widget(btn_next)
+        btn_next.bind(on_press=on_press_next)
+
+        # quit
+        def on_press_quit(inst):
+            app.stop()
+        btn_quit = Button(size_hint=(0.5, 1), text="Quit")
+        top_layout.add_widget(btn_quit)
+        btn_quit.bind(on_press=on_press_quit)
 
         return self.root_layout
 

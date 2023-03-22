@@ -80,7 +80,7 @@ class JavisApp(App, SingletonInstane):
         )
         layout.add_widget(self.output)
 
-        listener_widget = self.listener.initialize(self.output, height='100sp', size_hint=(1, None))
+        listener_widget = self.listener.initialize(self, self.output, height='100sp', size_hint=(1, None))
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)
