@@ -65,9 +65,10 @@ class JavisApp(App, SingletonInstane):
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         output = Config.get(*config_javis_output)
         self.output = TextInput(
-            text=output,
+            text=''
             halign='left',
             readonly=True,
+            font_name='fonts/NanumGothic_Coding.ttf',
             font_size="12dp",
             multiline=True,
             size_hint=(1, 2),
