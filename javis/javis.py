@@ -24,7 +24,7 @@ class JavisApp(App, SingletonInstane):
     def __init__(self):
         super(JavisApp, self).__init__()
         Logger.info(f'Run: {JavisApp.__name__}')
-
+        
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
         self.evaluator = Evaluator(self.memory)
@@ -47,7 +47,7 @@ class JavisApp(App, SingletonInstane):
         # initialize config
         
     def destroy(self):
-        with open(javis_output_filename, 'w') as f:
+        with open(javis_output_file, 'w') as f:
             f.write(self.output.text)
 
     def on_stop(self):
@@ -63,10 +63,12 @@ class JavisApp(App, SingletonInstane):
         Window.configure_keyboards()
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
+        
         output = ''
-        if os.path.exists(javis_output_filename):
-            with open(javis_output_filename, 'r') as f:
+        if os.path.exists(javis_output_file):
+            with open(javis_output_file, 'r') as f:
                 output = f.read()
+                
         self.output = TextInput(
             text=output,
             halign='left',
