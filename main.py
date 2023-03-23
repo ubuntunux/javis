@@ -1,14 +1,15 @@
 from glob import glob
 import os
 
+from javis.constants import *
 
-def run_app():
+def run_app():     
     log_folder = os.path.abspath('.log')
     log_maxfiles = 10
 
     # Note: Config must be set before import kivy.logger
     from kivy.config import Config
-    Config.read('config.ini')
+    Config.read(javis_config_file)
     Config.set('kivy', 'log_level', 'info')
     Config.set('kivy', 'log_enable', 1)
     Config.set('kivy', 'log_name', '%Y%m%d_%H%M%S_%_.log')
