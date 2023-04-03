@@ -7,6 +7,7 @@ from kivy.clock import Clock
 from kivy.metrics import Metrics
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
@@ -29,6 +30,7 @@ class JavisApp(App, SingletonInstane):
         self.chairman = ChairMan(self.memory)
         self.evaluator = Evaluator(self.memory)
         self.listener = Listener(self.memory)
+        self.screen_helper = None
 
         # # create
         # chairman_thread = Thread(target=chairman, args=[memory])
@@ -61,8 +63,17 @@ class JavisApp(App, SingletonInstane):
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
-
+        
+        self.root = Widget()
+        self.screen_helper = ScreenHelper(size=Window.size)
+        self.root.add_widget(self.screen_helper.screen_manager)
+        screen = Screen(name="javis")
+        self.screen_helper.add_screen(screen)
+        self.screen_helper.current_screen(screen)
+        
         layout = BoxLayout(orientation='vertical', size=(1, 1))
+        screen.add_widget(layout)
+         
         
         output = ''
         if os.path.exists(javis_output_file):
@@ -86,7 +97,7 @@ class JavisApp(App, SingletonInstane):
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)
-        return layout
+        return self.root
 
     def update(self, dt):
         pass
