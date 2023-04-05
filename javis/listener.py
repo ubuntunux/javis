@@ -82,7 +82,7 @@ class Listener:
             sys.stdout = prev_stdout
             text_input.text = ''
 
-        text_input = TextInput( text='', size_hint=(3, 1), font_name='fonts/NanumGothic_Coding.ttf')
+        text_input = TextInput( text='', size_hint=(3, 1), auto_indent=True, font_name=app_font_name)
 
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
