@@ -1,4 +1,5 @@
-import os.path
+import os
+import sys
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -8,6 +9,7 @@ from kivy.metrics import Metrics
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
@@ -55,8 +57,31 @@ class JavisApp(App, SingletonInstane):
     def on_stop(self):
         self.listener.destroy()
         self.destroy()
-        Config.write()
+        Config.write()    
         
+    def clear_output(self):
+        self.output_layout.clear()
+        
+    def print_output(self, text):
+        output = TextInput(
+            halign='left',
+            readonly=True,
+            font_name='fonts/NanumGothic_Coding.ttf',
+            font_size="12dp",
+            multiline=True,
+            size_hint=(1, None),
+            height=0,
+            background_color=(1, 1, 1, 0),
+            foreground_color=(1, 1, 1, 1)
+        ) 
+        output.text = text
+        output.height = output.minimum_height
+    
+        self.output_layout.add_widget(output)
+        self.output_layout.height = self.output_layout.height + output.height
+        #self.output_scroll_view.scroll_x = 0
+        #self.output_scroll_view.scroll_y = 0
+       
     def build(self):
         # Window.maximize()
         Window.softinput_mode = 'below_target'
@@ -73,27 +98,24 @@ class JavisApp(App, SingletonInstane):
         
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         screen.add_widget(layout)
-         
+               
         
-        output = ''
+        self.output_scroll_view = ScrollView(size_hint=(1,1))
+        self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None))
+        self.output_scroll_view.add_widget(self.output_layout)
+        layout.add_widget(self.output_scroll_view)
+        
+        # print python version
+        self.print_output("Python " + sys.version.strip())
+        # print history
+        output_text = ''
         if os.path.exists(javis_output_file):
             with open(javis_output_file, 'r') as f:
-                output = f.read()
-                
-        self.output = TextInput(
-            text=output,
-            halign='left',
-            readonly=True,
-            font_name='fonts/NanumGothic_Coding.ttf',
-            font_size="12dp",
-            multiline=True,
-            size_hint=(1, 2),
-            background_color=(1, 1, 1, 0),
-            foreground_color=(1, 1, 1, 1)
-        )
-        layout.add_widget(self.output)
-
-        listener_widget = self.listener.initialize(self, self.output, height='100sp', size_hint=(1, None))
+                output_text = f.read()
+        self.print_output(output_text)
+        
+        # initialize listner
+        listener_widget = self.listener.initialize(self, height='100sp', size_hint=(1, None))
         layout.add_widget(listener_widget)
 
         Clock.schedule_interval(self.update, 0)

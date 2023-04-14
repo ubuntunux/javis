@@ -38,7 +38,7 @@ class Listener:
             Config.set(*config_listener_pos, (0, 0))
         Config.write()
 
-    def initialize(self, app, output, height, size_hint):
+    def initialize(self, app, height, size_hint):
         # inner layout
         self.root_layout = BoxLayout(orientation='vertical', height=height, size_hint=size_hint)
         create_dynamic_rect(self.root_layout, color=(1, 1, 1, 0.1))
@@ -65,7 +65,7 @@ class Listener:
                 self.history_index = -1
 
             if cmd == 'clear' or cmd == 'cls':
-                output.text = ''
+                app.clear_output()
             elif cmd == 'dir' or cmd == 'ls':
                 for content in os.listdir():
                     print(content)
@@ -78,7 +78,10 @@ class Listener:
                         exec(cmd, self.myGlobals)
                     except:
                         print(traceback.format_exc())
-            output.text = '\n'.join([output.text, sys.stdout.getvalue()]).rstrip()
+            output_text = sys.stdout.getvalue().rstrip()
+            # print output
+            app.print_output(output_text)
+            
             sys.stdout = prev_stdout
             text_input.text = ''
 
