@@ -139,7 +139,7 @@ class Listener:
         input_layout.add_widget(btn_enter)
 
         def on_clear(*args):
-            output.text = ''
+            app.clear_output()
 
         btn_enter = Button(size_hint=(1, 1), text="Clear")
         btn_enter.bind(on_press=on_clear)

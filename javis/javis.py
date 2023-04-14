@@ -60,17 +60,18 @@ class JavisApp(App, SingletonInstane):
         Config.write()    
         
     def clear_output(self):
-        self.output_layout.clear()
+        self.output_layout.clear_widgets()
         
     def print_output(self, text):
+        # important: keep this form and parameters
         output = TextInput(
             halign='left',
             readonly=True,
             font_name='fonts/NanumGothic_Coding.ttf',
             font_size="12dp",
             multiline=True,
-            size_hint=(1, None),
-            height=0,
+            size_hint=(None, None),
+            size=(Window.size[0], 0),
             background_color=(1, 1, 1, 0),
             foreground_color=(1, 1, 1, 1)
         ) 
@@ -78,9 +79,9 @@ class JavisApp(App, SingletonInstane):
         output.height = output.minimum_height
     
         self.output_layout.add_widget(output)
-        self.output_layout.height = self.output_layout.height + output.height
-        #self.output_scroll_view.scroll_x = 0
-        #self.output_scroll_view.scroll_y = 0
+        self.output_layout.height += output.height
+        self.output_scroll_view.scroll_x = 0
+        self.output_scroll_view.scroll_y = 0
        
     def build(self):
         # Window.maximize()
@@ -98,10 +99,9 @@ class JavisApp(App, SingletonInstane):
         
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         screen.add_widget(layout)
-               
         
         self.output_scroll_view = ScrollView(size_hint=(1,1))
-        self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None))
+        self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None), height=0)
         self.output_scroll_view.add_widget(self.output_layout)
         layout.add_widget(self.output_scroll_view)
         
