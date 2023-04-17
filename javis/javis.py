@@ -35,6 +35,7 @@ class JavisApp(App, SingletonInstane):
         self.listener = Listener(self.memory)
         self.screen_helper = None
         self.is_first_update = True
+        self.ignore_texts = []
 
         # # create
         # chairman_thread = Thread(target=chairman, args=[memory])
@@ -53,22 +54,40 @@ class JavisApp(App, SingletonInstane):
         # initialize config
         
     def destroy(self):
-        with open(javis_output_file, 'w') as f:
-            outputs = [output.text for output in self.output_layout.children]
-            f.write(repr(outputs))
+        self.save_output()
 
     def on_stop(self):
         self.listener.destroy()
         self.destroy()
-        Config.write()    
+        Config.write()
+        
+    def load_output(self):
+        try:
+            outputs = []
+            if os.path.exists(javis_output_file):
+                with open(javis_output_file, 'r') as f:
+                    outputs = eval(f.read())
+            for output in outputs:
+                self.print_output(output)
+        except:
+            self.print_output(traceback.format_exc())
+        
+    def save_output(self):
+        with open(javis_output_file, 'w') as f:
+            outputs = [
+                output.text for output in self.output_layout.children
+                if output not in self.ignore_texts
+            ]
+            f.write(repr(outputs))
         
     def clear_output(self):
+        self.ignore_texts.clear()
         self.output_layout.clear_widgets()
         self.output_layout.height = 0
         self.output_scroll_view.scroll_x = 0
         self.output_scroll_view.scroll_y = 0
         
-    def print_output(self, text):
+    def print_output(self, text, save=True):
         # important: keep this form and parameters
         output = TextInput(
             halign='left',
@@ -83,9 +102,16 @@ class JavisApp(App, SingletonInstane):
         ) 
         output.text = text
         output.height = output.minimum_height
+        
+        if not save:
+            self.ignore_texts.append(output)
     
         self.output_layout.add_widget(output)
         self.output_layout.height += output.height
+        self.output_scroll_view.height = min(
+            self.output_layout.height,
+            Window.size[1] - self.listener_widget.height
+        )
         self.output_scroll_view.scroll_x = 0
         self.output_scroll_view.scroll_y = 0
        
@@ -106,7 +132,7 @@ class JavisApp(App, SingletonInstane):
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         screen.add_widget(layout)
         
-        self.output_scroll_view = ScrollView(size_hint=(1,1))
+        self.output_scroll_view = ScrollView(size_hint=(1, None))
         self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None), height=0)
         self.output_scroll_view.add_widget(self.output_layout)
         layout.add_widget(self.output_scroll_view)
@@ -120,18 +146,9 @@ class JavisApp(App, SingletonInstane):
         
     def first_update(self):
         # print python version
-        self.print_output("Python " + sys.version.strip())
+        self.print_output("Python " + sys.version.strip(), save=False)
         # print history 
-        try:
-            outputs = []
-            if os.path.exists(javis_output_file):
-                with open(javis_output_file, 'r') as f:
-                    outputs = eval(f.read())
-            for output in outputs:
-                self.print_output(output)
-        except:
-            self.print_output(traceback.format_exc())
-        
+        self.load_output()  
 
     def update(self, dt):
         if self.is_first_update:
