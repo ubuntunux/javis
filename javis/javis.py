@@ -61,6 +61,9 @@ class JavisApp(App, SingletonInstane):
         
     def clear_output(self):
         self.output_layout.clear_widgets()
+        self.output_layout.height = 0
+        self.output_scroll_view.scroll_x = 0
+        self.output_scroll_view.scroll_y = 0
         
     def print_output(self, text):
         # important: keep this form and parameters
