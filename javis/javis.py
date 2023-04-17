@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 from kivy.app import App
 from kivy.core.window import Window
@@ -33,6 +34,7 @@ class JavisApp(App, SingletonInstane):
         self.evaluator = Evaluator(self.memory)
         self.listener = Listener(self.memory)
         self.screen_helper = None
+        self.is_first_update = True
 
         # # create
         # chairman_thread = Thread(target=chairman, args=[memory])
@@ -52,7 +54,8 @@ class JavisApp(App, SingletonInstane):
         
     def destroy(self):
         with open(javis_output_file, 'w') as f:
-            f.write(self.output.text)
+            outputs = [output.text for output in self.output_layout.children]
+            f.write(repr(outputs))
 
     def on_stop(self):
         self.listener.destroy()
@@ -108,22 +111,30 @@ class JavisApp(App, SingletonInstane):
         self.output_scroll_view.add_widget(self.output_layout)
         layout.add_widget(self.output_scroll_view)
         
-        # print python version
-        self.print_output("Python " + sys.version.strip())
-        # print history
-        output_text = ''
-        if os.path.exists(javis_output_file):
-            with open(javis_output_file, 'r') as f:
-                output_text = f.read()
-        self.print_output(output_text)
-        
         # initialize listner
-        listener_widget = self.listener.initialize(self, height='100sp', size_hint=(1, None))
-        layout.add_widget(listener_widget)
+        self.listener_widget = self.listener.initialize(self, height='100sp', size_hint=(1, None))
+        layout.add_widget(self.listener_widget)
 
         Clock.schedule_interval(self.update, 0)
         return self.root
+        
+    def first_update(self):
+        # print python version
+        self.print_output("Python " + sys.version.strip())
+        # print history 
+        try:
+            outputs = []
+            if os.path.exists(javis_output_file):
+                with open(javis_output_file, 'r') as f:
+                    outputs = eval(f.read())
+            for output in outputs:
+                self.print_output(output)
+        except:
+            self.print_output(traceback.format_exc())
+        
 
     def update(self, dt):
-        pass
+        if self.is_first_update:
+            self.first_update()
+            self.is_first_update = False
 
