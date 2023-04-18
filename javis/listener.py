@@ -18,6 +18,7 @@ from kivy.uix.codeinput import CodeInput
 from kivy.extras.highlight import KivyLexer
 
 from javis.constants import *
+from javis import commands
 from utility.kivy_helper import create_rect, create_dynamic_rect
 
 
@@ -63,14 +64,13 @@ class Listener:
             if cmd != '' and (0 == len(self.history) or self.history[-1] != cmd):
                 self.history.append(cmd)
                 self.history_index = -1
-
-            if cmd == 'clear' or cmd == 'cls':
-                app.clear_output()
-            elif cmd == 'dir' or cmd == 'ls':
-                for content in os.listdir():
-                    print(content)
-            elif cmd != '':
+            
+            if cmd != '':
                 print(">>>", cmd)
+
+            if commands.run_command(app, cmd):
+                pass
+            elif cmd != '':
                 try:
                     print(eval(cmd, self.myGlobals))
                 except:

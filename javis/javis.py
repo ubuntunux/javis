@@ -125,12 +125,12 @@ class JavisApp(App, SingletonInstane):
         self.root = Widget()
         self.screen_helper = ScreenHelper(size=Window.size)
         self.root.add_widget(self.screen_helper.screen_manager)
-        screen = Screen(name="javis")
-        self.screen_helper.add_screen(screen)
-        self.screen_helper.current_screen(screen)
+        self.screen = Screen(name="javis")
+        self.screen_helper.add_screen(self.screen)
+        self.screen_helper.current_screen(self.screen)
         
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-        screen.add_widget(layout)
+        self.screen.add_widget(layout)
         
         self.output_scroll_view = ScrollView(size_hint=(1, None))
         self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None), height=0)
