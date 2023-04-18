@@ -68,7 +68,7 @@ class Listener:
             if cmd != '':
                 print(">>>", cmd)
 
-            if commands.run_command(app, cmd):
+            if commands.run_command(cmd):
                 pass
             elif cmd != '':
                 try:
