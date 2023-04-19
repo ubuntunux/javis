@@ -66,7 +66,7 @@ class Listener:
                 self.history_index = -1
             
             if cmd != '':
-                print(">>>", cmd)
+                app.print_output(">>> " + cmd)
 
             if commands.run_command(cmd):
                 pass
