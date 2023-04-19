@@ -11,6 +11,7 @@ from kivy.config import Config
 from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
@@ -47,16 +48,14 @@ class Listener:
         # top layout
         top_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
         self.root_layout.add_widget(top_layout)
-        label = Label(text="Javis", font_size='30sp', halign='right')
-        top_layout.add_widget(label)
-
+       
         # input_layout
         input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
         self.root_layout.add_widget(input_layout)
 
         # text layout
         def on_enter(text_input, instance):
-            self.multiline = False
+            #self.multiline = False
             prev_stdout = sys.stdout
             sys.stdout = StringIO()
             cmd = text_input.text.rstrip()
@@ -85,11 +84,21 @@ class Listener:
             sys.stdout = prev_stdout
             text_input.text = ''
 
-        text_input = TextInput( text='', size_hint=(3, 1), auto_indent=True, font_name=app_font_name)
-
+        text_input = TextInput(
+            text='', 
+            size_hint=(3, 1), 
+            auto_indent=True,
+            font_name=app_font_name,
+            padding_x="10dp",
+            padding_y="10dp"
+        )
         text_input.bind(on_text_validate=partial(on_enter, text_input))
         input_layout.add_widget(text_input)
-
+           
+        btn_enter = Button(size_hint=(1, 1), text="Run", background_color=(1.3,1.3,2,2))
+        btn_enter.bind(on_press=partial(on_enter, text_input))
+        input_layout.add_widget(btn_enter)
+        
         def on_press_prev(inst):
             if self.multiline:
                 return
@@ -133,32 +142,36 @@ class Listener:
         keyboard = Window.request_keyboard(keyboard_closed, text_input)
         keyboard.bind(on_key_down=on_key_down)
         text_input.focus = True
-
-        btn_enter = Button(size_hint=(1, 1), text="Run")
-        btn_enter.bind(on_press=partial(on_enter, text_input))
-        input_layout.add_widget(btn_enter)
-
-        def on_clear(*args):
-            app.clear_output()
-
-        btn_enter = Button(size_hint=(1, 1), text="Clear")
-        btn_enter.bind(on_press=on_clear)
-        input_layout.add_widget(btn_enter)
-
+        
+        gray = [1, 1, 1, 1]
+        bright_blue = [1.5, 1.5, 2.0, 2]
+        dark_gray = [0.4, 0.4, 0.4, 2]
+  
+        # logo
+        logo_image = Image(source=logo_file, allow_stretch=True, keep_ratio=True, size_hint_x=None)
+        top_layout.add_widget(logo_image)
+        
         # prev
-        btn_prev = Button(size_hint=(0.5, 1), text="<<")
+        btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
         top_layout.add_widget(btn_prev)
         btn_prev.bind(on_press=on_press_prev)
 
         # next
-        btn_next = Button(size_hint=(0.5, 1), text=">>")
+        btn_next = Button(size_hint=(1, 1), text=">>", background_color=dark_gray)
         top_layout.add_widget(btn_next)
         btn_next.bind(on_press=on_press_next)
+        
+        def on_clear(*args):
+            app.clear_output()
+
+        btn_clear = Button(size_hint=(1, 1), text="Clear", background_color=dark_gray)
+        btn_clear.bind(on_press=on_clear)
+        top_layout.add_widget(btn_clear)
 
         # quit
         def on_press_quit(inst):
             app.stop()
-        btn_quit = Button(size_hint=(0.5, 1), text="Quit")
+        btn_quit = Button(size_hint=(0.5, 1), text="Quit", background_color=dark_gray)
         top_layout.add_widget(btn_quit)
         btn_quit.bind(on_press=on_press_quit)
 
