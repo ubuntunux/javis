@@ -6,9 +6,11 @@ from threading import Thread
 import time
 import traceback
 
+from kivy import metrics
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.graphics import Color, Rectangle
+from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
@@ -26,11 +28,14 @@ from utility.kivy_helper import create_rect, create_dynamic_rect
 class Listener:
     def __init__(self, memory):
         self.memory = memory
-        self.myGlobals = {}
+        self.globals = {}
         self.root_layout = None
         self.history = []
         self.history_index = -1
-        self.multiline = False
+        self.is_indent_mode = False
+        self.text_input = None
+        self.input_layout = None
+        self.top_layout = None
 
         # initialize config
         if not Config.has_section(section_listener):
@@ -40,97 +45,126 @@ class Listener:
             Config.set(*config_listener_pos, (0, 0))
         Config.write()
 
-    def initialize(self, app, height, size_hint):
+    def initialize(self, app):
+        text_font_size = metrics.dp(14)
+        text_padding_y = metrics.dp(10)
+        text_height = text_font_size + text_padding_y * 2.0
+        root_layout_padding = metrics.dp(4)
+        root_layout_height = (text_height + root_layout_padding) * 2.0
+
         # inner layout
-        self.root_layout = BoxLayout(orientation='vertical', height=height, size_hint=size_hint)
+        self.root_layout = BoxLayout(orientation='vertical', size_hint=(1, None), height=root_layout_height, padding=root_layout_padding)
         create_dynamic_rect(self.root_layout, color=(1, 1, 1, 0.1))
 
         # top layout
-        top_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
-        self.root_layout.add_widget(top_layout)
-       
+        self.top_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, None), height=text_height)
+        self.root_layout.add_widget(self.top_layout)
+
         # input_layout
-        input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), padding='4sp')
-        self.root_layout.add_widget(input_layout)
+        self.input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), height=text_height)
+        self.root_layout.add_widget(self.input_layout)
 
         # text layout
-        def on_enter(text_input, instance):
-            #self.multiline = False
-            prev_stdout = sys.stdout
-            sys.stdout = StringIO()
-            cmd = text_input.text.rstrip()
+        def on_enter(text_input, is_force_run, instance):
+            cmd = text_input.text.strip()
+            if cmd:
+                prev_stdout = sys.stdout
+                sys.stdout = StringIO()
 
-            if cmd != '' and (0 == len(self.history) or self.history[-1] != cmd):
-                self.history.append(cmd)
-                self.history_index = -1
-            
-            if cmd != '':
-                app.print_output(">>> " + cmd)
+                cmd_lines = cmd.split("\n")
+                # indent mode - continue input but not run
+                if not is_force_run:
+                    is_cursor_at_end = len(text_input.text) == text_input.cursor_index()
+                    num_lines_of_cmd = text_input.text.lstrip().count('\n')
+                    run_code = is_cursor_at_end and 1 <= (num_lines_of_cmd - len(cmd_lines))
+                    lastline = cmd_lines[-1]
+                    if not run_code and (not is_cursor_at_end or lastline[-1] in ("\\", ":") or self.is_indent_mode):
+                        self.is_indent_mode = True
+                        text_input.height = text_input.minimum_height
+                        return
 
-            if commands.run_command(cmd):
-                pass
-            elif cmd != '':
-                try:
-                    print(eval(cmd, self.myGlobals))
-                except:
+                # prepare running command
+                self.is_indent_mode = False
+
+                # display command
+                results = []
+                for line_index, cmd_line in enumerate(cmd_lines):
+                    results.append((">>> " if line_index == 0 else "... ") + cmd_line)
+                results = "\n".join(results)
+                app.print_output(results)
+
+                # regist to histroy
+                if 0 == len(self.history) or self.history[-1] != cmd:
+                    self.history.append(cmd)
+                    self.history_index = -1
+
+                # run command
+                if commands.run_command(cmd):
+                    pass
+                else:
                     try:
-                        exec(cmd, self.myGlobals)
+                        print(eval(cmd, self.globals))
                     except:
-                        print(traceback.format_exc())
-            output_text = sys.stdout.getvalue().rstrip()
-            # print output
-            app.print_output(output_text)
-            
-            sys.stdout = prev_stdout
-            text_input.text = ''
+                        try:
+                            exec(cmd, self.globals)
+                        except:
+                            print(traceback.format_exc())
 
-        text_input = TextInput(
-            text='', 
-            size_hint=(3, 1), 
+                # display output
+                output_text = sys.stdout.getvalue().rstrip()
+                if output_text:
+                    app.print_output(output_text)
+
+                # reset
+                sys.stdout = prev_stdout
+                text_input.text = ''
+                text_input.height = text_input.minimum_height
+                Logger.info(str(text_input.height))
+
+        # input widget
+        self.text_input = TextInput(
+            text='',
+            size_hint=(3, None),
+            height=text_height,
+            multiline=True,
             auto_indent=True,
             font_name=app_font_name,
-            padding_x="10dp",
-            padding_y="10dp"
+            font_size=text_font_size,
+            padding_x=metrics.dp(10),
+            padding_y=text_padding_y,
         )
-        text_input.bind(on_text_validate=partial(on_enter, text_input))
-        input_layout.add_widget(text_input)
-           
-        btn_enter = Button(size_hint=(1, 1), text="Run", background_color=(1.3,1.3,2,2))
-        btn_enter.bind(on_press=partial(on_enter, text_input))
-        input_layout.add_widget(btn_enter)
-        
+        # self.text_input.bind(on_text_validate=partial(on_enter, self.text_input, False))
+        self.input_layout.add_widget(self.text_input)
+
+        # button run
+        btn_enter = Button(text="Run", size_hint=(1, None), height=text_height - 2.0, background_color=(1.3, 1.3, 2,2))
+        btn_enter.bind(on_press=partial(on_enter, self.text_input, True))
+        self.input_layout.add_widget(btn_enter)
+
         def on_press_prev(inst):
-            if self.multiline:
-                return
             num_history = len(self.history)
             if 0 < num_history:
                 if self.history_index < 0:
                     self.history_index = num_history - 1
                 elif 0 < self.history_index:
                     self.history_index -= 1
-                text_input.text = self.history[self.history_index]
+                self.text_input.text = self.history[self.history_index]
+                self.is_indent_mode = self.text_input.text.find("\n") > -1
 
         def on_press_next(inst):
-            if self.multiline:
-                return
             num_history = len(self.history)
             if 0 < num_history and 0 <= self.history_index < num_history:
                 self.history_index += 1
                 if self.history_index == num_history:
-                    text_input.text = ''
+                    self.text_input.text = ''
                 else:
-                    text_input.text = self.history[self.history_index]
-        
+                    self.text_input.text = self.history[self.history_index]
+                self.is_indent_mode = self.text_input.text.find("\n") > -1
+
         def on_key_down(keyboard, keycode, key, modifiers):
             key_name = keycode[1]
             if key_name == 'enter' or key_name == 'numpadenter':
-                if 'shift' in modifiers:
-                    self.multiline = True
-                elif 'ctrl' in modifiers:
-                    self.multiline = False
-                # run
-                if not self.multiline:
-                    on_enter(text_input, text_input)
+                on_enter(self.text_input, False, self.text_input)
             elif key_name == 'up':
                 on_press_prev(None)
             elif key_name == 'down':
@@ -139,40 +173,37 @@ class Listener:
         def keyboard_closed(*args):
             pass
 
-        keyboard = Window.request_keyboard(keyboard_closed, text_input)
+        keyboard = Window.request_keyboard(keyboard_closed, self.text_input)
         keyboard.bind(on_key_down=on_key_down)
-        text_input.focus = True
-        
-        gray = [1, 1, 1, 1]
-        bright_blue = [1.5, 1.5, 2.0, 2]
-        dark_gray = [0.4, 0.4, 0.4, 2]
-  
+        self.text_input.focus = True
+
         # logo
         logo_image = Image(source=logo_file, allow_stretch=True, keep_ratio=True, size_hint_x=None)
-        top_layout.add_widget(logo_image)
-        
+        self.top_layout.add_widget(logo_image)
+
         # prev
+        dark_gray = [0.4, 0.4, 0.4, 2]
         btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
-        top_layout.add_widget(btn_prev)
+        self.top_layout.add_widget(btn_prev)
         btn_prev.bind(on_press=on_press_prev)
 
         # next
         btn_next = Button(size_hint=(1, 1), text=">>", background_color=dark_gray)
-        top_layout.add_widget(btn_next)
+        self.top_layout.add_widget(btn_next)
         btn_next.bind(on_press=on_press_next)
-        
+
         def on_clear(*args):
             app.clear_output()
 
         btn_clear = Button(size_hint=(1, 1), text="Clear", background_color=dark_gray)
         btn_clear.bind(on_press=on_clear)
-        top_layout.add_widget(btn_clear)
+        self.top_layout.add_widget(btn_clear)
 
         # quit
         def on_press_quit(inst):
             app.stop()
         btn_quit = Button(size_hint=(0.5, 1), text="Quit", background_color=dark_gray)
-        top_layout.add_widget(btn_quit)
+        self.top_layout.add_widget(btn_quit)
         btn_quit.bind(on_press=on_press_quit)
 
         return self.root_layout
