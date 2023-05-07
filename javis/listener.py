@@ -119,7 +119,7 @@ class Listener:
                 sys.stdout = prev_stdout
                 text_input.text = ''
                 text_input.height = text_input.minimum_height
-                #text_input.focus = True
+                text_input.focus = True
 
         # input widget
         self.text_input = TextInput(
