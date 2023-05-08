@@ -9,13 +9,18 @@ from kivy.uix.widget import Widget
 from javis import javis
 from utility.kivy_helper import *
 
-def run_command(cmd):
+def run_command(cmd_text):
     app = javis.JavisApp.instance()
+    cmds = cmd_text.strip().split()
+    cmd = cmds[0]
     if cmd == 'clear' or cmd == 'cls':
         app.clear_output()
     elif cmd == 'dir' or cmd == 'ls':
         for content in os.listdir():
             print(content)
+    elif cmd == 'cd':
+        os.chdir(cmds[1])
+        print(os.getcwd())
     elif cmd == 'memo':
         memo = MemoApp(app)
         app.screen.add_widget(memo)
