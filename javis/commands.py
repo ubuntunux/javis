@@ -1,5 +1,5 @@
 import os
-
+import traceback 
 from kivy.graphics import Color
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
@@ -9,24 +9,39 @@ from kivy.uix.widget import Widget
 from javis import javis
 from utility.kivy_helper import *
 
-def run_command(cmd_text):
-    app = javis.JavisApp.instance()
-    cmds = cmd_text.strip().split()
-    cmd = cmds[0]
-    if cmd == 'clear' or cmd == 'cls':
-        app.clear_output()
-    elif cmd == 'dir' or cmd == 'ls':
-        for content in os.listdir():
-            print(content)
-    elif cmd == 'cd':
-        os.chdir(cmds[1])
-        print(os.getcwd())
-    elif cmd == 'memo':
-        memo = MemoApp(app)
-        app.screen.add_widget(memo)
-    else:
-        return False
-    return True
+class Commander:
+    def __init__(self, app):
+        self.app = app
+        self.commands = {}
+        #self.regist_command(app)
+        
+    def run_command(self, cmd_text):
+        app = javis.JavisApp.instance()
+        cmds = cmd_text.strip().split()
+        cmd = cmds[0]
+
+    def regist_command(app):
+        if cmd == 'clear' or cmd == 'cls':
+            app.clear_output()
+        elif cmd == 'dir' or cmd == 'ls':
+            for content in os.listdir():
+                print(content)
+        elif cmd == 'cd':
+            if 1 < len(cmds):
+                target = cmds[1]
+                try:
+                    os.chdir(target)
+                    print(os.getcwd())
+                except:
+                    print("No such file or directory: " + target)
+            else:
+                print("usage: cd directory")
+        elif cmd == 'memo':
+            memo = MemoApp(app)
+            app.screen.add_widget(memo)
+        else:
+            return False
+        return True
 
 class MemoApp(Widget):
     def __init__(self, app):

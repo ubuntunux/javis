@@ -13,15 +13,17 @@ from kivy.graphics import Color, Rectangle
 from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 from kivy.uix.codeinput import CodeInput
 from kivy.extras.highlight import KivyLexer
 
 from javis.constants import *
-from javis import commands
 from utility.kivy_helper import create_rect, create_dynamic_rect
 
 
@@ -44,6 +46,16 @@ class Listener:
         if not Config.has_option(*config_listener_pos):
             Config.set(*config_listener_pos, (0, 0))
         Config.write()
+        
+    def refresh_auto_compmete(self):
+        text_font_size = metrics.dp(14)
+        text_padding_y = metrics.dp(10)
+        text_height = text_font_size + text_padding_y * 2.0
+        self.auto_complete_layout.height = self.auto_complete_vertical_layout.padding[0] * 2.0
+        for text in ["cd", "dir"]:
+            btn = Button(text=text, size_hint=(1.0, None), font_size=text_font_size, height=text_height, padding_y=text_padding_y)
+            self.auto_complete_vertical_layout.add_widget(btn)
+            self.auto_complete_layout.height += text_height
 
     def initialize(self, app):
         text_font_size = metrics.dp(14)
@@ -63,7 +75,23 @@ class Listener:
         # input_layout
         self.input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), height=text_height)
         self.root_layout.add_widget(self.input_layout)
-
+        
+        # auto complete
+        self.auto_complete_layout = ScatterLayout(
+            size_hint=(None, None),
+            width=text_font_size * 10.0 + text_padding_y * 2.0, 
+            height=text_height
+        )
+        create_dynamic_rect(self.auto_complete_layout, color=(0.1, 0.1, 0.1, 1.0))
+        self.auto_complete_layout.pos = (
+            Window.size[0] - self.auto_complete_layout.width,
+            self.auto_complete_layout.height
+        )
+        self.auto_complete_vertical_layout = BoxLayout(orientation='vertical', size_hint=(1, 1), padding=metrics.dp(10))
+        self.auto_complete_layout.add_widget(self.auto_complete_vertical_layout)
+        app.screen.add_widget(self.auto_complete_layout)
+        self.refresh_auto_compmete()
+        
         # text layout
         def on_enter(text_input, is_force_run, instance):
             cmd = text_input.text.strip()
@@ -99,7 +127,7 @@ class Listener:
                     self.history_index = -1
 
                 # run command
-                if commands.run_command(cmd):
+                if app.commander.run_command(cmd):
                     pass
                 else:
                     try:

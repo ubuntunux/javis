@@ -16,6 +16,7 @@ from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
 
 from javis.constants import *
+from javis.commands import Commander
 from javis.memory import Memory
 from javis.chairman import ChairMan
 from javis.evaluator import Evaluator
@@ -33,6 +34,7 @@ class JavisApp(App, SingletonInstane):
         self.chairman = ChairMan(self.memory)
         self.evaluator = Evaluator(self.memory)
         self.listener = Listener(self.memory)
+        self.commander = Commander(self)
         self.screen_helper = None
         self.screen = None
         self.listener_widget = None
