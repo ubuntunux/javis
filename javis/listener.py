@@ -29,6 +29,7 @@ from utility.kivy_helper import create_rect, create_dynamic_rect
 
 class Listener:
     def __init__(self, memory):
+        self.app = None
         self.memory = memory
         self.globals = {}
         self.root_layout = None
@@ -52,12 +53,18 @@ class Listener:
         text_padding_y = metrics.dp(10)
         text_height = text_font_size + text_padding_y * 2.0
         self.auto_complete_layout.height = self.auto_complete_vertical_layout.padding[0] * 2.0
-        for text in ["cd", "dir"]:
+        
+        def func_auto_complete(text, inst):
+            self.text_input.text = text
+        
+        for text in self.app.commander.get_commands():
             btn = Button(text=text, size_hint=(1.0, None), font_size=text_font_size, height=text_height, padding_y=text_padding_y)
+            btn.bind(on_press=partial(func_auto_complete, text))
             self.auto_complete_vertical_layout.add_widget(btn)
             self.auto_complete_layout.height += text_height
 
     def initialize(self, app):
+        self.app = app
         text_font_size = metrics.dp(14)
         text_padding_y = metrics.dp(10)
         text_height = text_font_size + text_padding_y * 2.0

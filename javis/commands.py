@@ -13,20 +13,35 @@ class Commander:
     def __init__(self, app):
         self.app = app
         self.commands = {}
-        #self.regist_command(app)
+        self.regist_command(app)
+        
+    def get_commands(self):
+        keys = list(self.commands.keys())
+        keys.sort()
+        return keys
         
     def run_command(self, cmd_text):
         app = javis.JavisApp.instance()
         cmds = cmd_text.strip().split()
         cmd = cmds[0]
+        if cmd in self.commands:
+            self.commands[cmd](cmds)
+            return True
+        return False
 
-    def regist_command(app):
-        if cmd == 'clear' or cmd == 'cls':
+    def regist_command(self, app):
+        def cmd_clear(*args):
             app.clear_output()
-        elif cmd == 'dir' or cmd == 'ls':
+        self.commands["clear"] = cmd_clear
+        self.commands["cls"] = cmd_clear
+        
+        def cmd_dir(*args):
             for content in os.listdir():
                 print(content)
-        elif cmd == 'cd':
+        self.commands["dir"] = cmd_dir
+        self.commands["ls"] = cmd_dir
+                    
+        def cmd_change_directory(cmds):
             if 1 < len(cmds):
                 target = cmds[1]
                 try:
@@ -36,11 +51,13 @@ class Commander:
                     print("No such file or directory: " + target)
             else:
                 print("usage: cd directory")
-        elif cmd == 'memo':
+        self.commands["cd"] = cmd_change_directory
+        
+        def cmd_memo(*args):
             memo = MemoApp(app)
             app.screen.add_widget(memo)
-        else:
-            return False
+        self.commands["memo"] = cmd_memo
+        
         return True
 
 class MemoApp(Widget):
