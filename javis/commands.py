@@ -35,24 +35,25 @@ class Commander:
         def cmd_perceptron(args):
             if 5 == len(args):
                 y,x,eta,n = [eval(x) for x in args[1:]]
-                #y = np.array(y)
-                #x = np.array(x)
+                y = np.array(y)
+                x = np.array(x)
                 rgen = np.random.RandomState(1)
-                w = rgen.normal(loc=0.0, scale=0.01, size=2)
+                w = rgen.normal(loc=0.0, scale=0.01, size=1+x.shape[1])
                 
                 for i in range(n):
-                    net_input = (x * w[1]) + w[0]
-                    error = y - net_input
-                    w[1] += eta * min(1.0, max(-1.0, x)) * error
-                    w[0] += eta * error
-                    cost = (error**2) / 2.0
-                    print("[{0}] Goal: {1}, Predict: {2}, Cost: {3}, Input: {4}, Weights: {5}".format(i,y,net_input,error,x,w))
-                return (w[1],w[0])      
+                    net_input = np.dot(x, w[1:]) + w[0]
+                    errors = y - net_input
+                    w[1:] += eta * x.T.dot(errors)
+                    w[0] += eta * errors.sum()
+                    cost = (errors**2).sum() / 2.0
+                    print("[{0}] Goal: {1}, Predict: {2}, Cost: {3}, Input: {4}, Weights: {5}".format(i,y,net_input,errors,x,w))
+                return (w[1:],w[0])      
             else:
                 print("ex) perceptron y(goal) x(init) w(weight) r(learning ratio) n(traning num)")
+                print("perceptron [-1,1] [[0.1,0.2],[0.3,0.4]] 0.5 20")
             return (0,0)
         self.commands["perceptron"] = cmd_perceptron
-        
+   
         # sum of arithmetic sequence
         def cmd_arithmetic_sequence(args):
             if 5 == len(args):
