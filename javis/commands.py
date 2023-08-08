@@ -30,33 +30,42 @@ class Commander:
         return False
 
     def regist_command(self, app):
-        # traning
-        def cmd_traning(args):
+        # perceptron
+        def cmd_perceptron(args):
             if 6 == len(args):
                 y,x,w,r,n = [eval(x) for x in args[1:]]
                 w0 = 0.0
                 for i in range(n):
                     predict = x*w+w0
                     error = y - predict
-                    #print("p:%f, e:%f, x:%f, r:%f, w:%f, dw:%f" % (predict, error, x, r, w, r*error*x))
                     w += r * error * x
                     w0 += r * error
-                    print("[%d] Goal: %f, Init: %f, Predict: %f, Error: %f, Weight: %f, Weight0: %f" % (i,y,x,predict,error,w,w0))
+                    print("[%d] Goal: %f, Predict: %f, Error: %f, Input: %f, Weight: %f, Weight0: %f" % (i,y,predict,error,x,w,w0))
                 return (w,w0)      
             else:
-                print("ex) traning y(goal) x(init) w(weight) r(learning ratio) n(traning num)")
+                print("ex) perceptron y(goal) x(init) w(weight) r(learning ratio) n(traning num)")
             return (0,0)
-        self.commands["traning"] = cmd_traning
+        self.commands["perceptron"] = cmd_perceptron
         
-        # sum of series
-        def cmd_sum_of_sequence(args):
+        # sum of arithmetic sequence
+        def cmd_arithmetic_sequence(args):
             if 5 == len(args):
                 target = args[1]
                 s = lambda a, r, n, m: (m-n+1)*(2*a+r*(n+m-2))/2
                 print(s(*[eval(x) for x in args[1:]]))
             else:
-                print("ex) sum_of_sequence a r n m",args)
-        self.commands["sum_of_sequence"] = cmd_sum_of_sequence
+                print("ex) arithmetic_sequence a r n m = (m-n+1)*(2*a+r*(n+m-2))/2")
+        self.commands["arithmetic_sequence"] = cmd_arithmetic_sequence
+        
+        # sum of geometric sequence
+        def cmd_geometric_sequence(args):
+            if 5 == len(args):
+                target = args[1]
+                s = lambda a, r, n, m: a * (r**m - r**(n-1)) / (r - 1)
+                print(s(*[eval(x) for x in args[1:]]))
+            else:
+                print("ex) geometric_sequence a r n m = a * (r**m - r**(n-1)) / (1 - r)")
+        self.commands["geometric_sequence"] = cmd_geometric_sequence
         
         # clear
         def cmd_clear(*args):
