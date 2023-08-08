@@ -5,6 +5,7 @@ from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.widget import Widget
+import numpy as np
 
 from javis import javis
 from utility.kivy_helper import *
@@ -32,16 +33,21 @@ class Commander:
     def regist_command(self, app):
         # perceptron
         def cmd_perceptron(args):
-            if 6 == len(args):
-                y,x,w,r,n = [eval(x) for x in args[1:]]
-                w0 = 0.0
+            if 5 == len(args):
+                y,x,eta,n = [eval(x) for x in args[1:]]
+                #y = np.array(y)
+                #x = np.array(x)
+                rgen = np.random.RandomState(1)
+                w = rgen.normal(loc=0.0, scale=0.01, size=2)
+                
                 for i in range(n):
-                    predict = x*w+w0
-                    error = y - predict
-                    w += r * error * x
-                    w0 += r * error
-                    print("[%d] Goal: %f, Predict: %f, Error: %f, Input: %f, Weight: %f, Weight0: %f" % (i,y,predict,error,x,w,w0))
-                return (w,w0)      
+                    net_input = (x * w[1]) + w[0]
+                    error = y - net_input
+                    w[1] += eta * min(1.0, max(-1.0, x)) * error
+                    w[0] += eta * error
+                    cost = (error**2) / 2.0
+                    print("[{0}] Goal: {1}, Predict: {2}, Cost: {3}, Input: {4}, Weights: {5}".format(i,y,net_input,error,x,w))
+                return (w[1],w[0])      
             else:
                 print("ex) perceptron y(goal) x(init) w(weight) r(learning ratio) n(traning num)")
             return (0,0)
