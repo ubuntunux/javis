@@ -7,6 +7,7 @@ class SingletonInstane:
 
     @classmethod
     def instance(cls, *args, **kargs):
-        cls.__instance = cls(*args, **kargs)
-        cls.instance = cls.__getInstance
+        if cls.__instance is None:
+            cls.__instance = cls(*args, **kargs)
+            cls.instance = cls.__getInstance
         return cls.__instance
